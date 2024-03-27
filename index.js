@@ -34,9 +34,7 @@ db.run(`CREATE TABLE IF NOT EXISTS temp_channels (
 const client = new Discord.Client({
 	intents: [
 		"Guilds",
-		"GuildVoiceStates",
-		//"GuildMembers",
-		//"GuildPresences"
+		"GuildVoiceStates"
 	]
 });
 
