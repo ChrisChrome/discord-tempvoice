@@ -35,8 +35,8 @@ const client = new Discord.Client({
 	intents: [
 		"Guilds",
 		"GuildVoiceStates",
-		"GuildMembers",
-		"GuildPresences"
+		//"GuildMembers",
+		//"GuildPresences"
 	]
 });
 
