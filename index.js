@@ -192,7 +192,7 @@ client.on("voiceStateUpdate", async (oldState, newState) => {
 								{
 									color: 0xff0000,
 									title: "Temporary Voice Channel",
-									description: `This is a temporary voice channel created by ${newState.member.user.tag}.\nThis voice channel and the messages within will be deleted when the channel is empty!`,
+									description: `This is a temporary voice channel created by ${newState.member.user}.\nThis voice channel and the messages within will be deleted when the channel is empty!`,
 								}
 							]
 						});
