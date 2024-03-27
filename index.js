@@ -189,6 +189,15 @@ client.on("voiceStateUpdate", async (oldState, newState) => {
 						type: Discord.ChannelType.GuildVoice,
 						parent: row.voice_category_id
 					}).then((channel) => {
+						channel.send({
+							embeds: [
+								{
+									color: 0xff0000,
+									title: "Temporary Voice Channel",
+									description: `This is a temporary voice channel created by ${newState.member.user.tag}.\nThis voice channel and the messages within will be deleted when the channel is empty!`,
+								}
+							]
+						});
 						// Move the user to the new channel
 						newState.setChannel(channel);
 						// Update the database
