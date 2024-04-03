@@ -63,6 +63,49 @@ client.on("ready", async () => {
 	}
 	);
 	console.log(`${colors.cyan("[INFO]")} Successfully reloaded application (/) commands.`);
+	console.log(`${colors.cyan("[INFO]")} Checking for empty temporary voice channels and missing creation channels.`);
+	deletedCreation = 0
+	// Run through every category that is set up in the database and make sure the creation channel exists, if not, remove the entry from the database. Dont attempt to make a new channel, its likely they wanted to delete it
+	await db.all("SELECT * FROM guild_settings", (err, rows) => {
+		if (err) {
+			console.error(err);
+		}
+		rows.forEach((row) => {
+			const guild = client.guilds.cache.get(row.guild_id);
+			const voice_category = guild.channels.cache.get(row.voice_category_id);
+			const creation_channel = guild.channels.cache.get(row.creation_channel_id);
+			if (!creation_channel) {
+				deletedCreation++
+				db.run("DELETE FROM guild_settings WHERE voice_category_id = ?", row.voice_category_id, (err) => {
+					if (err) {
+						console.error(err);
+					}
+				});
+			}
+		});
+	});
+	deletedTemp = 0;
+	// Run through every temp channel in the database, if it's empty delete it
+	await db.all("SELECT * FROM temp_channels", (err, rows) => {
+		if (err) {
+			console.error(err);
+		}
+		rows.forEach((row) => {
+			const guild = client.guilds.cache.get(row.guild_id);
+			const channel = guild.channels.cache.get(row.channel_id);
+			if (!channel.members || channel.members.size === 0) {
+				deletedTemp+
+				channel.delete();
+				db.run("DELETE FROM temp_channels WHERE channel_id = ?", row.channel_id, (err) => {
+					if (err) {
+						console.error(err);
+					}
+				});
+			}
+		});
+	});
+	console.log(`${colors.cyan("[INFO]")} Checked for empty temporary voice channels and missing creation channels. Deleted ${deletedCreation} creation channels and ${deletedTemp} temporary voice channels.`);
+	
 })
 
 client.on("interactionCreate", async (interaction) => {
@@ -235,6 +278,36 @@ client.on("voiceStateUpdate", async (oldState, newState) => {
 			}
 		});
 	}
+});
+
+client.on("channelDelete", async (channel) => {
+	// Check if the channel deleted was a creation channel, if so, remove the settings from the database
+	db.get("SELECT * FROM guild_settings WHERE creation_channel_id = ?", channel.id, (err, row) => {
+		if (err) {
+			console.error(err);
+		}
+		if (row) {
+			db.run("DELETE FROM guild_settings WHERE creation_channel_id = ?", channel.id, (err) => {
+				if (err) {
+					console.error(err);
+				}
+			});
+		}
+	});
+
+	// Check if it was a temp channel, if so, delete it from the database
+	db.get("SELECT * FROM temp_channels WHERE channel_id = ?", channel.id, (err, row) => {
+		if (err) {
+			console.error(err);
+		}
+		if (row) {
+			db.run("DELETE FROM temp_channels WHERE channel_id = ?", channel.id, (err) => {
+				if (err) {
+					console.error(err);
+				}
+			});
+		}
+	});
 });
 
 // Lets actually handle exceptions now
